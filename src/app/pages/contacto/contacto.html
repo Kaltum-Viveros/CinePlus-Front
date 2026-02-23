@@ -1,0 +1,123 @@
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="text-center mb-4">
+        <h1 class="fw-bold"><i class="bi bi-envelope me-2"></i>Contacto</h1>
+        <p class="text-muted">¿Tienes alguna duda o sugerencia? ¡Escríbenos!</p>
+      </div>
+
+      @if (submitted()) {
+        <div class="alert alert-success d-flex align-items-center" role="alert">
+          <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+          <div>
+            <strong>¡Mensaje enviado exitosamente!</strong><br />
+            Nos pondremos en contacto contigo pronto. Gracias por escribirnos.
+          </div>
+        </div>
+      }
+
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <form (ngSubmit)="onSubmit()" novalidate>
+            <!-- Nombre -->
+            <div class="mb-3">
+              <label for="name" class="form-label fw-semibold">
+                <i class="bi bi-person me-1"></i>Nombre
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="name"
+                placeholder="Tu nombre completo"
+                [ngModel]="name()"
+                (ngModelChange)="onFieldChange('name', $event)"
+                [class.is-invalid]="errors()['name']"
+                name="name"
+              />
+              @if (errors()['name']) {
+                <div class="invalid-feedback">{{ errors()['name'] }}</div>
+              }
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label fw-semibold">
+                <i class="bi bi-envelope-at me-1"></i>Email
+              </label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                placeholder="correo@ejemplo.com"
+                [ngModel]="email()"
+                (ngModelChange)="onFieldChange('email', $event)"
+                [class.is-invalid]="errors()['email']"
+                name="email"
+              />
+              @if (errors()['email']) {
+                <div class="invalid-feedback">{{ errors()['email'] }}</div>
+              }
+            </div>
+
+            <!-- Mensaje -->
+            <div class="mb-3">
+              <label for="message" class="form-label fw-semibold">
+                <i class="bi bi-chat-text me-1"></i>Mensaje
+              </label>
+              <textarea
+                class="form-control"
+                id="message"
+                rows="5"
+                placeholder="Escribe tu mensaje aquí..."
+                [ngModel]="message()"
+                (ngModelChange)="onFieldChange('message', $event)"
+                [class.is-invalid]="errors()['message']"
+                name="message"
+              ></textarea>
+              @if (errors()['message']) {
+                <div class="invalid-feedback">{{ errors()['message'] }}</div>
+              }
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-send me-2"></i>Enviar mensaje
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Info adicional -->
+      <div class="row mt-4 g-3">
+        <div class="col-md-4">
+          <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body">
+              <i class="bi bi-geo-alt text-primary fs-2"></i>
+              <h6 class="mt-2 fw-bold">Dirección</h6>
+              <p class="text-muted small mb-0">Av. Principal #123, Centro</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body">
+              <i class="bi bi-telephone text-primary fs-2"></i>
+              <h6 class="mt-2 fw-bold">Teléfono</h6>
+              <p class="text-muted small mb-0">(555) 123-4567</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body">
+              <i class="bi bi-clock text-primary fs-2"></i>
+              <h6 class="mt-2 fw-bold">Horario</h6>
+              <p class="text-muted small mb-0">Lun - Dom: 10:00 - 23:00</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

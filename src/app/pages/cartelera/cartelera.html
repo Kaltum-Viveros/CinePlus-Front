@@ -1,0 +1,137 @@
+<div class="container py-4">
+  <!-- Header -->
+  <div class="text-center mb-4">
+    <h1 class="fw-bold"><i class="bi bi-film me-2"></i>Cartelera</h1>
+    <p class="text-muted">Descubre las películas disponibles y elige tu favorita</p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-6">
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Buscar película..."
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearchChange($event)"
+        />
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-funnel"></i></span>
+        <select
+          class="form-select"
+          [ngModel]="selectedGenre()"
+          (ngModelChange)="onGenreChange($event)"
+        >
+          <option value="">Todos los géneros</option>
+          @for (genre of genres; track genre) {
+            <option [value]="genre">{{ genre }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Movies Grid -->
+  @if (filteredMovies().length === 0) {
+    <div class="text-center py-5">
+      <i class="bi bi-emoji-frown display-1 text-muted"></i>
+      <p class="mt-3 text-muted fs-5">No se encontraron películas</p>
+    </div>
+  } @else {
+    <div class="row g-4">
+      @for (movie of filteredMovies(); track movie.id) {
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+          <div class="card movie-card h-100 shadow-sm">
+            <img
+              [src]="movie.poster"
+              [alt]="movie.title"
+              class="card-img-top movie-poster"
+              loading="lazy"
+            />
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title fw-bold">{{ movie.title }}</h5>
+              <div class="mb-2">
+                <span class="badge bg-primary me-1"
+                  ><i class="bi bi-tag me-1"></i>{{ movie.genre }}</span
+                >
+                <span class="badge bg-secondary"
+                  ><i class="bi bi-clock me-1"></i>{{ movie.duration }}</span
+                >
+              </div>
+              <p class="card-text text-muted small mb-2">
+                <i class="bi bi-cash me-1"></i>Precio: <strong>${{ movie.price }}</strong>
+              </p>
+              <div class="mt-auto d-grid gap-2">
+                <button class="btn btn-outline-info btn-sm" (click)="openModal(movie)">
+                  <i class="bi bi-info-circle me-1"></i>Ver detalles
+                </button>
+                <button class="btn btn-primary" (click)="selectMovie(movie)">
+                  <i class="bi bi-ticket-perforated me-1"></i>Elegir función
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Movie Modal -->
+@if (modalMovie(); as movie) {
+  <div class="modal-backdrop fade show" (click)="closeModal()"></div>
+  <div class="modal fade show d-block" tabindex="-1" (click)="closeModal()">
+    <div class="modal-dialog modal-lg modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-film me-2"></i>{{ movie.title }}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4 text-center mb-3">
+              <img
+                [src]="movie.poster"
+                [alt]="movie.title"
+                class="img-fluid rounded shadow"
+                style="max-height: 350px"
+              />
+            </div>
+            <div class="col-md-8">
+              <p class="mb-2">
+                <span class="badge bg-primary me-1">{{ movie.genre }}</span>
+                <span class="badge bg-secondary">{{ movie.duration }}</span>
+              </p>
+              <p class="mb-3">{{ movie.synopsis }}</p>
+              <p class="fw-bold fs-5 text-success">
+                <i class="bi bi-cash me-1"></i>Precio: ${{ movie.price }} por boleto
+              </p>
+              <div class="ratio ratio-16x9 mt-3">
+                <iframe
+                  [src]="getSafeUrl(movie.trailerUrl)"
+                  title="Tráiler"
+                  allowfullscreen
+                ></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closeModal()">
+            <i class="bi bi-x-lg me-1"></i>Cerrar
+          </button>
+          <button class="btn btn-primary" (click)="selectMovie(movie)">
+            <i class="bi bi-ticket-perforated me-1"></i>Elegir función
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

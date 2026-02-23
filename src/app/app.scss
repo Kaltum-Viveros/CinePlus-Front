@@ -1,0 +1,22 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+.navbar-brand {
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+}
+
+.nav-link {
+  transition: color 0.2s ease;
+
+  &.active {
+    font-weight: 600;
+  }
+}

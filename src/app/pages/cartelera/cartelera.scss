@@ -1,0 +1,24 @@
+.movie-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+.movie-poster {
+  height: 380px;
+  object-fit: cover;
+}
+
+.modal {
+  z-index: 1060;
+}
+
+.modal-backdrop {
+  z-index: 1050;
+}

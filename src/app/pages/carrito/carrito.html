@@ -1,0 +1,150 @@
+<div class="container py-4">
+  <h1 class="fw-bold mb-4"><i class="bi bi-cart3 me-2"></i>Carrito de compra</h1>
+
+  @if (purchaseCompleted()) {
+    <!-- Compra exitosa -->
+    <div class="text-center py-5">
+      <i class="bi bi-check-circle text-success" style="font-size: 5rem"></i>
+      <h2 class="mt-3 fw-bold text-success">¡Compra confirmada!</h2>
+      <p class="text-muted fs-5">
+        Tu archivo <strong>boletos.txt</strong> se ha descargado automáticamente.
+      </p>
+      <button class="btn btn-primary btn-lg mt-3" (click)="goToCartelera()">
+        <i class="bi bi-film me-2"></i>Volver a la cartelera
+      </button>
+    </div>
+  } @else if (cart().length === 0) {
+    <!-- Carrito vacío -->
+    <div class="text-center py-5">
+      <i class="bi bi-cart-x text-muted" style="font-size: 5rem"></i>
+      <h3 class="mt-3 text-muted">Tu carrito está vacío</h3>
+      <p class="text-muted">Agrega boletos desde la cartelera para comenzar</p>
+      <button class="btn btn-primary btn-lg mt-2" (click)="goToCartelera()">
+        <i class="bi bi-film me-2"></i>Ver cartelera
+      </button>
+    </div>
+  } @else {
+    <div class="row g-4">
+      <!-- Lista de boletos -->
+      <div class="col-lg-8">
+        @for (ticket of cart(); track $index; let i = $index) {
+          <div class="card shadow-sm mb-3 ticket-card">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-auto d-none d-md-block">
+                  <img
+                    [src]="ticket.movie.poster"
+                    [alt]="ticket.movie.title"
+                    class="rounded"
+                    style="width: 70px; height: 100px; object-fit: cover"
+                  />
+                </div>
+                <div class="col">
+                  <h5 class="fw-bold mb-1">{{ ticket.movie.title }}</h5>
+                  <p class="mb-1 text-muted small">
+                    <i class="bi bi-calendar3 me-1"></i>{{ ticket.funcion.date }}
+                    <i class="bi bi-clock ms-2 me-1"></i>{{ ticket.funcion.time }} hrs
+                  </p>
+                  <p class="mb-1">
+                    <i class="bi bi-grid-3x3 me-1"></i>Asientos:
+                    <strong>{{ ticket.seats.join(', ') }}</strong>
+                  </p>
+                  <p class="mb-0 small text-muted">
+                    {{ ticket.seats.length }} boleto(s) × ${{ ticket.pricePerTicket }}
+                  </p>
+                </div>
+                <div class="col-auto text-end">
+                  <p class="fs-5 fw-bold text-primary mb-1">${{ ticket.subtotal }}</p>
+                  <button class="btn btn-outline-danger btn-sm" (click)="removeTicket(i)">
+                    <i class="bi bi-trash me-1"></i>Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Resumen -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm sticky-top" style="top: 90px">
+          <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Resumen</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Boletos:</span>
+              <strong>{{ cartCount() }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-3">
+              <span>Subtotal:</span>
+              <strong>${{ cartTotal() }}</strong>
+            </div>
+
+            <!-- Cupón -->
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">
+                <i class="bi bi-tag me-1"></i>Cupón de descuento
+              </label>
+              @if (!couponApplied()) {
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Ingresa tu cupón"
+                    [ngModel]="couponCode()"
+                    (ngModelChange)="onCouponChange($event)"
+                  />
+                  <button
+                    class="btn btn-outline-primary"
+                    (click)="applyCoupon()"
+                    [disabled]="!couponCode()"
+                  >
+                    Aplicar
+                  </button>
+                </div>
+                @if (couponError()) {
+                  <small class="text-danger mt-1 d-block">
+                    <i class="bi bi-exclamation-circle me-1"></i>{{ couponError() }}
+                  </small>
+                }
+              } @else {
+                <div class="alert alert-success py-2 mb-0 d-flex justify-content-between align-items-center">
+                  <span>
+                    <i class="bi bi-check-circle me-1"></i>
+                    <strong>{{ couponCode().toUpperCase() }}</strong> — {{ couponDiscount() }}% dto.
+                  </span>
+                  <button class="btn btn-sm btn-outline-danger" (click)="removeCoupon()">
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              }
+            </div>
+
+            @if (couponApplied()) {
+              <div class="d-flex justify-content-between mb-1 text-success">
+                <span>Descuento ({{ couponDiscount() }}%):</span>
+                <strong>-${{ discountAmount().toFixed(2) }}</strong>
+              </div>
+            }
+
+            <hr />
+            <div class="d-flex justify-content-between mb-3 fs-5">
+              <strong>Total:</strong>
+              <strong class="text-primary">${{ finalTotal().toFixed(2) }}</strong>
+            </div>
+
+            <div class="d-grid">
+              <button class="btn btn-success btn-lg" (click)="confirmPurchase()">
+                <i class="bi bi-bag-check me-2"></i>Confirmar compra
+              </button>
+            </div>
+            <p class="text-muted text-center small mt-2 mb-0">
+              Se descargará un archivo <strong>boletos.txt</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
