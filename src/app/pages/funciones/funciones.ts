@@ -4,6 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { CineService } from '../../services/cine.service';
 import { Seat, Funcion } from '../../models/movie.model';
 
+/**
+ * Componente para selección de función y asientos.
+ * 
+ * TODO: INTEGRACIÓN CON BACKEND
+ * Para asientos en tiempo real:
+ * 1. Cargar asientos ocupados desde GET /api/funciones/:id/asientos
+ * 2. Crear reserva temporal al seleccionar asientos: POST /api/reservas/temporal
+ * 3. La reserva temporal expira después de X minutos si no se completa la compra
+ */
 @Component({
   selector: 'app-funciones',
   imports: [FormsModule],
@@ -21,6 +30,8 @@ export class Funciones implements OnInit {
   protected selectedSeats = signal<string[]>([]);
   protected addedToCart = signal(false);
 
+  // TODO: BACKEND - Los horarios disponibles deberían obtenerse del servidor
+  // GET /api/funciones/:movieId con fecha especificada
   readonly availableTimes = [
     '10:00', '12:30', '15:00', '17:30', '20:00', '22:30',
   ];

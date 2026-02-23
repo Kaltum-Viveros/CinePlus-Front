@@ -2,11 +2,45 @@ import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core
 import { isPlatformBrowser } from '@angular/common';
 import { Movie, Ticket, Funcion, Seat } from '../models/movie.model';
 
+/**
+ * Servicio central para gestionar la lógica de CinePlus.
+ * 
+ * TODO: INTEGRACIÓN CON BACKEND
+ * Para conectar con un backend, realizar los siguientes cambios:
+ * 
+ * 1. Instalar HttpClient:
+ *    - Importar: import { HttpClient } from '@angular/common/http';
+ *    - Inyectar: private http = inject(HttpClient);
+ * 
+ * 2. Convertir 'movies' a signal dinámico:
+ *    - readonly movies = signal<Movie[]>([]);
+ *    - Crear método: loadMovies() que haga GET a /api/movies
+ * 
+ * 3. Reemplazar localStorage por llamadas al backend:
+ *    - cart: POST /api/cart para agregar, DELETE /api/cart/:id para eliminar
+ *    - occupiedSeats: GET /api/funciones/:movieId/:date/:time/asientos
+ *    - confirmPurchase: POST /api/compras con los datos del carrito
+ * 
+ * 4. Gestionar autenticación:
+ *    - Agregar token JWT en headers de las peticiones HTTP
+ * 
+ * 5. Endpoints sugeridos del backend:
+ *    - GET /api/movies - Obtener todas las películas
+ *    - GET /api/movies/:id - Obtener una película específica
+ *    - GET /api/funciones/:movieId - Obtener horarios disponibles
+ *    - GET /api/asientos/:funcionId - Obtener mapa de asientos ocupados
+ *    - POST /api/reservas - Crear reserva temporal de asientos
+ *    - POST /api/compras - Confirmar compra y generar boletos
+ *    - POST /api/cupones/validar - Validar código de cupón de descuento
+ */
 @Injectable({ providedIn: 'root' })
 export class CineService {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
+  // TODO: BACKEND - Reemplazar este array estático con una llamada HTTP
+  // Ejemplo: readonly movies = signal<Movie[]>([]);
+  //          loadMovies() { this.http.get<Movie[]>('/api/movies').subscribe(...) }
   readonly movies: Movie[] = [
     {
       id: 1,
@@ -112,7 +146,8 @@ export class CineService {
 
   readonly genres = [...new Set(this.movies.map((m) => m.genre))];
 
-  // Signals
+  // TODO: BACKEND - Estos signals deberían sincronizarse con el backend
+  // En lugar de localStorage, usar endpoints para persistir el estado del usuario
   readonly selectedMovie = signal<Movie | null>(this.loadFromStorage('selectedMovie'));
   readonly selectedFuncion = signal<Funcion | null>(this.loadFromStorage('selectedFuncion'));
   readonly cart = signal<Ticket[]>(this.loadFromStorage('cart') || []);
@@ -138,11 +173,15 @@ export class CineService {
     this.saveToStorage('selectedFuncion', funcion);
   }
 
+  // TODO: BACKEND - Este método debería consultar al servidor
+  // GET /api/asientos/:movieId/:date/:time
   getOccupiedSeatsForFuncion(movieId: number, funcion: Funcion): string[] {
     const key = `${movieId}_${funcion.date}_${funcion.time}`;
     return this.occupiedSeats()[key] || [];
   }
 
+  // TODO: BACKEND - Agregar tickets al carrito debería hacer POST al servidor
+  // POST /api/cart con { movieId, funcionId, seats }
   addToCart(ticket: Ticket): void {
     const current = this.cart();
     this.cart.set([...current, ticket]);
@@ -161,6 +200,10 @@ export class CineService {
     this.saveToStorage('cart', []);
   }
 
+  // TODO: BACKEND - Confirmar compra debería:
+  // 1. POST /api/compras con todos los datos
+  // 2. El backend genera el PDF/TXT y retorna la URL de descarga
+  // 3. Marcar asientos como ocupados en la base de datos
   confirmPurchase(couponDiscount: number = 0): string {
     const tickets = this.cart();
     if (tickets.length === 0) return '';
@@ -213,6 +256,9 @@ export class CineService {
     return content;
   }
 
+  // TODO: BACKEND - El backend debería generar y retornar el archivo
+  // En lugar de generar el archivo en el cliente, el servidor lo genera
+  // y responde con un Blob o una URL de descarga
   downloadFile(content: string, filename: string): void {
     if (!this.isBrowser) return;
     const blob = new Blob([content], { type: 'text/plain' });
@@ -247,6 +293,9 @@ export class CineService {
     return map;
   }
 
+  // Métodos privados para localStorage (temporal)
+  // TODO: BACKEND - Eliminar estos métodos cuando se integre con backend
+  // El estado se manejará desde el servidor usando sesiones o autenticación
   private saveToStorage(key: string, value: unknown): void {
     if (!this.isBrowser) return;
     try {

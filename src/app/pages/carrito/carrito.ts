@@ -3,6 +3,14 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CineService } from '../../services/cine.service';
 
+/**
+ * Componente del carrito de compras.
+ * 
+ * TODO: INTEGRACIÓN CON BACKEND
+ * Para gestionar compras reales:
+ * 1. Validar cupones con el backend: POST /api/cupones/validar
+ * 2. Confirmar compra en el servidor antes de marcar asientos como ocupados
+ */
 @Component({
   selector: 'app-carrito',
   imports: [FormsModule],
@@ -23,6 +31,7 @@ export class Carrito {
   protected purchaseCompleted = signal(false);
   protected couponError = signal('');
 
+  // TODO: BACKEND - Los cupones deberían validarse contra el servidor
   private readonly validCoupons: Record<string, number> = {
     CINE10: 10,
     CINE20: 20,
@@ -41,6 +50,21 @@ export class Carrito {
 
   applyCoupon(): void {
     const code = this.couponCode().toUpperCase().trim();
+    
+    // TODO: BACKEND - Validar cupón con el servidor
+    // this.http.post<{valid: boolean, discount: number}>('/api/cupones/validar', { code })
+    //   .subscribe({
+    //     next: (response) => {
+    //       if (response.valid) {
+    //         this.couponDiscount.set(response.discount);
+    //         this.couponApplied.set(true);
+    //         this.couponError.set('');
+    //       } else {
+    //         this.couponError.set('Cupón no válido');
+    //       }
+    //     }
+    //   });
+    
     if (this.validCoupons[code]) {
       this.couponDiscount.set(this.validCoupons[code]);
       this.couponApplied.set(true);

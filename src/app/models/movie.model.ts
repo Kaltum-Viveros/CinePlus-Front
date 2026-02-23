@@ -1,3 +1,15 @@
+/**
+ * Modelos de datos de la aplicación CinePlus.
+ * 
+ * TODO: INTEGRACIÓN CON BACKEND
+ * Estos modelos deberían coincidir con los DTOs del backend.
+ * Considerar agregar:
+ * - id de función (funcionId) para referencia en el backend
+ * - timestamps (createdAt, updatedAt)
+ * - id de usuario para asociar reservas
+ * - estado de la reserva/compra (pendiente, confirmada, cancelada)
+ */
+
 export interface Movie {
   id: number;
   title: string;

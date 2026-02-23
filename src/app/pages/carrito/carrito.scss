@@ -1,9 +1,84 @@
 .ticket-card {
-  transition: transform 0.2s ease;
+  transition: all 0.3s ease;
   border: none;
-  border-left: 4px solid #0d6efd;
+  border-left: 4px solid #667eea;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 
   &:hover {
-    transform: translateX(4px);
+    transform: translateX(8px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+    border-left-width: 6px;
   }
+  
+  // Asegurar buen contraste en todos los textos
+  .card-body {
+    color: #333;
+    
+    h5 {
+      color: #1a1a2e;
+    }
+    
+    .text-muted {
+      color: #666 !important;
+    }
+    
+    p {
+      color: #333;
+    }
+  }
+}
+
+.sticky-top {
+  background: #ffffff !important;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  
+  // Asegurar buen contraste en el resumen
+  .card-body {
+    color: #333;
+    
+    .text-muted {
+      color: #666 !important;
+    }
+  }
+}
+
+.card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  border-radius: 14px 14px 0 0 !important;
+  color: #ffffff !important;
+  
+  h5 {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    color: #ffffff !important;
+  }
+}
+
+.alert-success {
+  background: linear-gradient(135deg, rgba(17, 153, 142, 0.15) 0%, rgba(56, 239, 125, 0.15) 100%) !important;
+  border: 2px solid rgba(17, 153, 142, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(17, 153, 142, 0.2);
+}
+
+.empty-cart {
+  color: #e0e0e0;
+  
+  i {
+    color: #667eea;
+  }
+  
+  h3, p {
+    color: #e0e0e0;
+  }
+}
+
+h1 {
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }

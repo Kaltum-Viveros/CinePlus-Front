@@ -1,6 +1,15 @@
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+/**
+ * Componente de formulario de contacto.
+ * 
+ * TODO: INTEGRACIÓN CON BACKEND
+ * Para enviar mensajes reales al backend:
+ * 1. Inyectar HttpClient
+ * 2. En onSubmit(), hacer POST /api/contacto con { name, email, message }
+ * 3. Manejar respuestas de error del servidor
+ */
 @Component({
   selector: 'app-contacto',
   imports: [FormsModule],
@@ -38,6 +47,8 @@ export class Contacto {
 
   onSubmit(): void {
     if (!this.validate()) return;
+
+    // TODO: BACKEND - Enviar datos al servidor
 
     this.submitted.set(true);
     this.name.set('');

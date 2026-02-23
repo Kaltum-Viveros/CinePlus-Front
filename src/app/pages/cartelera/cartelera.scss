@@ -1,18 +1,173 @@
-.movie-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: none;
+// Hero Header
+.hero-header {
+  padding: 3rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-title {
+  color: #ffffff;
+  animation: fadeInUp 1s ease;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  
+  i {
+    color: #667eea;
+    filter: drop-shadow(0 4px 10px rgba(102, 126, 234, 0.8));
+  }
+}
+
+.hero-subtitle {
+  color: #e0e0e0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  animation: fadeInUp 1s ease 0.2s both;
+  font-weight: 500;
+}
+
+.hero-decoration {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  animation: fadeInUp 1s ease 0.4s both;
+}
+
+.decoration-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  animation: bounce-dot 1.5s ease-in-out infinite;
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.5);
+  
+  &:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  
+  &:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+}
+
+@keyframes bounce-dot {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Enhanced Input Groups
+.input-group-enhanced {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   overflow: hidden;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  
+  &:hover {
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+  }
+  
+  .input-group-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+  }
+  
+  .form-control, .form-select {
+    border: none;
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+    color: #333;
+    
+    &:focus {
+      box-shadow: none;
+      background: #ffffff;
+    }
+    
+    &::placeholder {
+      color: #999;
+    }
+  }
+}
+
+// No results message
+.no-results {
+  color: #e0e0e0;
+  
+  i {
+    color: #667eea;
+  }
+}
+
+// Movie Cards
+.movie-card {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  background: #ffffff !important;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
   &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-10px);
+    box-shadow: 0 20px 50px rgba(102, 126, 234, 0.5) !important;
+    border-color: rgba(102, 126, 234, 0.8);
+    
+    .movie-poster {
+      transform: scale(1.05);
+    }
+  }
+  
+  .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 }
 
 .movie-poster {
-  height: 380px;
+  width: 100%;
+  aspect-ratio: 2/3;
   object-fit: cover;
+  object-position: center;
+  transition: transform 0.5s ease;
+  display: block;
+  background: #f0f0f0;
+}
+
+.card-img-top {
+  border-bottom: 3px solid rgba(102, 126, 234, 0.3);
+}
+
+.card-title {
+  color: #1a1a2e;
+  font-size: 1.1rem;
+  margin-bottom: 0.8rem;
+  font-weight: 700;
 }
 
 .modal {
@@ -21,4 +176,19 @@
 
 .modal-backdrop {
   z-index: 1050;
+  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+.modal-content {
+  border-radius: 20px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  background: #ffffff !important;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-bottom: none;
+  border-radius: 18px 18px 0 0 !important;
 }
