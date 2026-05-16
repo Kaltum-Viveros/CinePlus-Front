@@ -22,8 +22,13 @@ export interface Movie {
 }
 
 export interface Funcion {
+  id?: number;
+  movieId?: number;
+  movieTitle?: string;
   date: string;
   time: string;
+  room?: string;
+  available?: boolean;
 }
 
 export interface Seat {

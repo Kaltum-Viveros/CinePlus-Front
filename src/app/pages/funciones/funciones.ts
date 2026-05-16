@@ -30,11 +30,19 @@ export class Funciones implements OnInit {
   protected selectedSeats = signal<string[]>([]);
   protected addedToCart = signal(false);
 
-  // TODO: BACKEND - Los horarios disponibles deberían obtenerse del servidor
-  // GET /api/funciones/:movieId con fecha especificada
-  readonly availableTimes = [
-    '10:00', '12:30', '15:00', '17:30', '20:00', '22:30',
-  ];
+  readonly availableFunciones = this.cineService.funcionesDisponibles;
+  readonly loadingFunciones = this.cineService.loadingFunciones;
+  readonly funcionesError = this.cineService.funcionesError;
+
+  readonly availableTimes = computed(() =>
+    this.availableFunciones().map((funcion) => funcion.time)
+  );
+
+  protected selectedFuncionBackend = computed(() =>
+    this.availableFunciones().find(
+      (funcion) => funcion.time === this.selectedTime()
+    ) || null
+  );
 
   protected minDate = this.cineService.getMinDate();
 
@@ -58,11 +66,27 @@ export class Funciones implements OnInit {
 
   onDateChange(value: string): void {
     this.selectedDate.set(value);
-    this.rebuildSeatMap();
+    this.selectedTime.set('');
+    this.selectedSeats.set([]);
+    this.addedToCart.set(false);
+    this.seatMap.set([]);
+
+    const movie = this.movie();
+
+    if (movie && value) {
+      this.cineService.loadFuncionesByMovieAndDate(movie.id, value);
+    }
   }
 
   onTimeChange(value: string): void {
     this.selectedTime.set(value);
+
+    const funcion = this.selectedFuncionBackend();
+
+    if (funcion) {
+      this.cineService.selectFuncion(funcion);
+    }
+
     this.rebuildSeatMap();
   }
 
@@ -78,7 +102,7 @@ export class Funciones implements OnInit {
       return;
     }
 
-    const funcion: Funcion = { date, time };
+    const funcion: Funcion = this.selectedFuncionBackend() || { date, time };
     const occupied = this.cineService.getOccupiedSeatsForFuncion(movie.id, funcion);
     this.seatMap.set(this.cineService.generateSeatMap(7, 10, occupied));
   }
@@ -121,10 +145,12 @@ export class Funciones implements OnInit {
     const movie = this.movie();
     if (!movie || this.selectedSeats().length === 0) return;
 
-    const funcion: Funcion = {
+    const funcion: Funcion = this.selectedFuncionBackend() || {
       date: this.selectedDate(),
       time: this.selectedTime(),
     };
+
+    this.cineService.selectFuncion(funcion);
 
     this.cineService.addToCart({
       movie,

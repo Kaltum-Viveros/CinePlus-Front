@@ -40,7 +40,8 @@ export class CineService {
   private isBrowser = isPlatformBrowser(this.platformId);
   private http = inject(HttpClient);
 
-    private readonly peliculasApiUrl = 'http://localhost:8001/api/v1/peliculas';
+  private readonly peliculasApiUrl = 'http://localhost:8001/api/v1/peliculas';
+  private readonly funcionesApiUrl = 'http://localhost:8002/api/v1/funciones';
 
   // TODO: BACKEND - Reemplazar este array estático con una llamada HTTP
   // Ejemplo: readonly movies = signal<Movie[]>([]);
@@ -48,6 +49,10 @@ export class CineService {
   readonly movies = signal<Movie[]>([]);
   readonly loadingMovies = signal<boolean>(false);
   readonly moviesError = signal<string | null>(null);
+
+  readonly funcionesDisponibles = signal<Funcion[]>([]);
+  readonly loadingFunciones = signal<boolean>(false);
+  readonly funcionesError = signal<string | null>(null);
 
   readonly genres = computed(() => [
     ...new Set(this.movies().map((movie) => movie.genre)),
@@ -98,6 +103,30 @@ export class CineService {
   selectFuncion(funcion: Funcion): void {
     this.selectedFuncion.set(funcion);
     this.saveToStorage('selectedFuncion', funcion);
+  }
+
+  loadFuncionesByMovieAndDate(movieId: number, date: string): void {
+    if (!movieId || !date) {
+      this.funcionesDisponibles.set([]);
+      return;
+    }
+
+    this.loadingFunciones.set(true);
+    this.funcionesError.set(null);
+
+    const url = `${this.funcionesApiUrl}/disponibles?movieId=${movieId}&date=${date}`;
+
+    this.http.get<Funcion[]>(url).subscribe({
+      next: (funciones) => {
+        this.funcionesDisponibles.set(funciones);
+        this.loadingFunciones.set(false);
+      },
+      error: () => {
+        this.funcionesDisponibles.set([]);
+        this.funcionesError.set('No se pudieron cargar los horarios desde el backend.');
+        this.loadingFunciones.set(false);
+      },
+    });
   }
 
   // TODO: BACKEND - Este método debería consultar al servidor
