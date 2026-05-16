@@ -18,22 +18,29 @@ export class Cartelera {
 
   readonly movies = this.cineService.movies;
   readonly genres = this.cineService.genres;
+  // mostrar error si falla el backend y evitar mostrar un cartel vacío
+  readonly loadingMovies = this.cineService.loadingMovies;
+  readonly moviesError = this.cineService.moviesError;
 
   protected searchTerm = signal('');
   protected selectedGenre = signal('');
   protected modalMovie = signal<Movie | null>(null);
 
   protected filteredMovies = computed(() => {
-    let result = this.movies;
+    let result = this.movies();
     const genre = this.selectedGenre();
     const search = this.searchTerm().toLowerCase();
 
     if (genre) {
-      result = result.filter((m) => m.genre === genre);
+      result = result.filter((movie) => movie.genre === genre);
     }
+
     if (search) {
-      result = result.filter((m) => m.title.toLowerCase().includes(search));
+      result = result.filter((movie) =>
+        movie.title.toLowerCase().includes(search)
+      );
     }
+
     return result;
   });
 

@@ -39,13 +39,25 @@
           (ngModelChange)="onGenreChange($event)"
         >
           <option value="">Todos los géneros</option>
-          @for (genre of genres; track genre) {
+          @for (genre of genres(); track genre) {
             <option [value]="genre">{{ genre }}</option>
           }
         </select>
       </div>
     </div>
   </div>
+
+  @if (loadingMovies()) {
+    <div class="alert alert-info text-center">
+      Cargando cartelera desde el backend...
+    </div>
+  }
+
+  @if (moviesError()) {
+    <div class="alert alert-danger text-center">
+      {{ moviesError() }}
+    </div>
+  }
 
   <!-- Movies Grid -->
   @if (filteredMovies().length === 0) {
