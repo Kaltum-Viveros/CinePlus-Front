@@ -37,7 +37,16 @@ export interface Seat {
   status: 'free' | 'selected' | 'occupied';
 }
 
+export interface ReservaResponse {
+  id: number;
+  funcionId: number;
+  asientos: string[];
+  estado: 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA';
+  fechaCreacion: string;
+}
+
 export interface Ticket {
+  reservaId?: number;
   movie: Movie;
   funcion: Funcion;
   seats: string[];

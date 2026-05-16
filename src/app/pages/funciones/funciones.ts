@@ -34,6 +34,11 @@ export class Funciones implements OnInit {
   readonly loadingFunciones = this.cineService.loadingFunciones;
   readonly funcionesError = this.cineService.funcionesError;
 
+  readonly loadingAsientos = this.cineService.loadingAsientos;
+  readonly asientosError = this.cineService.asientosError;
+  readonly creatingReserva = this.cineService.creatingReserva;
+  readonly reservaError = this.cineService.reservaError;
+
   readonly availableTimes = computed(() =>
     this.availableFunciones().map((funcion) => funcion.time)
   );
@@ -71,6 +76,8 @@ export class Funciones implements OnInit {
     this.addedToCart.set(false);
     this.seatMap.set([]);
 
+    this.cineService.clearOccupiedSeatsForCurrentFuncion();
+
     const movie = this.movie();
 
     if (movie && value) {
@@ -80,29 +87,37 @@ export class Funciones implements OnInit {
 
   onTimeChange(value: string): void {
     this.selectedTime.set(value);
+    this.selectedSeats.set([]);
+    this.addedToCart.set(false);
+    this.seatMap.set([]);
 
     const funcion = this.selectedFuncionBackend();
 
-    if (funcion) {
-      this.cineService.selectFuncion(funcion);
+    if (!funcion?.id) {
+      return;
     }
 
-    this.rebuildSeatMap();
+    this.cineService.selectFuncion(funcion);
+
+    this.cineService.loadOccupiedSeatsForFuncion(funcion.id, () => {
+      this.rebuildSeatMap();
+    });
   }
 
   private rebuildSeatMap(): void {
     this.selectedSeats.set([]);
     this.addedToCart.set(false);
+
     const movie = this.movie();
     const date = this.selectedDate();
     const time = this.selectedTime();
+    const funcion = this.selectedFuncionBackend();
 
-    if (!movie || !date || !time) {
+    if (!movie || !date || !time || !funcion) {
       this.seatMap.set([]);
       return;
     }
 
-    const funcion: Funcion = this.selectedFuncionBackend() || { date, time };
     const occupied = this.cineService.getOccupiedSeatsForFuncion(movie.id, funcion);
     this.seatMap.set(this.cineService.generateSeatMap(7, 10, occupied));
   }
@@ -143,24 +158,25 @@ export class Funciones implements OnInit {
 
   addToCart(): void {
     const movie = this.movie();
-    if (!movie || this.selectedSeats().length === 0) return;
+    const funcion = this.selectedFuncionBackend();
+    const selectedSeats = [...this.selectedSeats()];
 
-    const funcion: Funcion = this.selectedFuncionBackend() || {
-      date: this.selectedDate(),
-      time: this.selectedTime(),
-    };
+    if (!movie || !funcion?.id || selectedSeats.length === 0) return;
 
-    this.cineService.selectFuncion(funcion);
+    this.cineService.createReserva(funcion.id, selectedSeats, (reserva) => {
+      this.cineService.selectFuncion(funcion);
 
-    this.cineService.addToCart({
-      movie,
-      funcion,
-      seats: [...this.selectedSeats()],
-      pricePerTicket: movie.price,
-      subtotal: this.subtotal(),
+      this.cineService.addToCart({
+        reservaId: reserva.id,
+        movie,
+        funcion,
+        seats: selectedSeats,
+        pricePerTicket: movie.price,
+        subtotal: selectedSeats.length * movie.price,
+      });
+
+      this.addedToCart.set(true);
     });
-
-    this.addedToCart.set(true);
   }
 
   goToCart(): void {

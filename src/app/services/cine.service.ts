@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Movie, Ticket, Funcion, Seat } from '../models/movie.model';
+import { Movie, Ticket, Funcion, Seat, ReservaResponse } from '../models/movie.model';
 
 /**
  * Servicio central para gestionar la lógica de CinePlus.
@@ -42,6 +42,7 @@ export class CineService {
 
   private readonly peliculasApiUrl = 'http://localhost:8001/api/v1/peliculas';
   private readonly funcionesApiUrl = 'http://localhost:8002/api/v1/funciones';
+  private readonly reservasApiUrl = 'http://localhost:8003/api/v1';
 
   // TODO: BACKEND - Reemplazar este array estático con una llamada HTTP
   // Ejemplo: readonly movies = signal<Movie[]>([]);
@@ -53,6 +54,13 @@ export class CineService {
   readonly funcionesDisponibles = signal<Funcion[]>([]);
   readonly loadingFunciones = signal<boolean>(false);
   readonly funcionesError = signal<string | null>(null);
+
+  readonly occupiedSeatsForCurrentFuncion = signal<string[]>([]);
+  readonly loadingAsientos = signal<boolean>(false);
+  readonly asientosError = signal<string | null>(null);
+
+  readonly creatingReserva = signal<boolean>(false);
+  readonly reservaError = signal<string | null>(null);
 
   readonly genres = computed(() => [
     ...new Set(this.movies().map((movie) => movie.genre)),
@@ -129,11 +137,86 @@ export class CineService {
     });
   }
 
-  // TODO: BACKEND - Este método debería consultar al servidor
-  // GET /api/asientos/:movieId/:date/:time
   getOccupiedSeatsForFuncion(movieId: number, funcion: Funcion): string[] {
+    if (funcion.id) {
+      return this.occupiedSeatsForCurrentFuncion();
+    }
+
     const key = `${movieId}_${funcion.date}_${funcion.time}`;
     return this.occupiedSeats()[key] || [];
+  }
+
+  clearOccupiedSeatsForCurrentFuncion(): void {
+    this.occupiedSeatsForCurrentFuncion.set([]);
+    this.asientosError.set(null);
+  }
+
+  loadOccupiedSeatsForFuncion(funcionId: number, onLoaded?: () => void): void {
+    if (!funcionId) {
+      this.clearOccupiedSeatsForCurrentFuncion();
+      return;
+    }
+
+    this.loadingAsientos.set(true);
+    this.asientosError.set(null);
+
+    this.http
+      .get<{ funcionId: number; asientosOcupados: string[] }>(
+        `${this.reservasApiUrl}/asientos/funcion/${funcionId}`
+      )
+      .subscribe({
+        next: (response) => {
+          this.occupiedSeatsForCurrentFuncion.set(response.asientosOcupados);
+          this.loadingAsientos.set(false);
+
+          if (onLoaded) {
+            onLoaded();
+          }
+        },
+        error: () => {
+          this.occupiedSeatsForCurrentFuncion.set([]);
+          this.asientosError.set('No se pudieron cargar los asientos ocupados.');
+          this.loadingAsientos.set(false);
+        },
+      });
+  }
+
+  createReserva(
+    funcionId: number,
+    asientos: string[],
+    onSuccess: (reserva: ReservaResponse) => void
+  ): void {
+    this.creatingReserva.set(true);
+    this.reservaError.set(null);
+
+    this.http
+      .post<ReservaResponse>(`${this.reservasApiUrl}/reservas`, {
+        funcionId,
+        asientos,
+      })
+      .subscribe({
+        next: (reserva) => {
+          this.creatingReserva.set(false);
+          onSuccess(reserva);
+        },
+        error: (error) => {
+          this.creatingReserva.set(false);
+
+          const detail = error?.error?.detail;
+
+          if (typeof detail === 'string') {
+            this.reservaError.set(detail);
+            return;
+          }
+
+          if (detail?.message) {
+            this.reservaError.set(detail.message);
+            return;
+          }
+
+          this.reservaError.set('No se pudo crear la reserva de asientos.');
+        },
+      });
   }
 
   // TODO: BACKEND - Agregar tickets al carrito debería hacer POST al servidor

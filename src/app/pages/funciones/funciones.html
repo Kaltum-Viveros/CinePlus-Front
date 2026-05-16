@@ -94,6 +94,20 @@
             Sala asignada: <strong>{{ funcion.room }}</strong>
           </div>
         }
+
+        @if (loadingAsientos()) {
+          <div class="alert alert-info mt-3 mb-0">
+            <i class="bi bi-hourglass-split me-1"></i>
+            Cargando disponibilidad real de asientos...
+          </div>
+        }
+
+        @if (asientosError()) {
+          <div class="alert alert-danger mt-3 mb-0">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            {{ asientosError() }}
+          </div>
+        }
       </div>
     </div>
 
@@ -152,14 +166,30 @@
             </div>
           }
 
+          @if (reservaError()) {
+            <div class="alert alert-danger mt-3">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              {{ reservaError() }}
+            </div>
+          }
+
           @if (!addedToCart()) {
             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
               <button
                 class="btn btn-primary btn-lg"
-                [disabled]="selectedCount() === 0"
+                [disabled]="selectedCount() === 0 || creatingReserva()"
                 (click)="addToCart()"
               >
-                <i class="bi bi-cart-plus me-1"></i>Agregar al carrito
+                @if (creatingReserva()) {
+                  <span>
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                    Reservando asientos...
+                  </span>
+                } @else {
+                  <span>
+                    <i class="bi bi-cart-plus me-1"></i>Agregar al carrito
+                  </span>
+                }
               </button>
             </div>
           } @else {
