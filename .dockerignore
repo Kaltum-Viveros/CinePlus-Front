@@ -1,0 +1,17 @@
+node_modules
+dist
+.angular
+.git
+.gitignore
+
+Dockerfile
+.dockerignore
+
+npm-debug.log
+yarn-error.log
+
+.vscode
+.idea
+
+.DS_Store
+Thumbs.db
