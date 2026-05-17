@@ -1,129 +1,225 @@
-# CinePlus 🎬
+# 🎬 CinePlus Front
 
-Aplicación web para gestión de cartelera cinematográfica, selección de asientos y compra de boletos.
+Frontend Angular para la plataforma **CinePlus**.
 
-## Descripción
+Este proyecto corresponde a una aplicación de cine que permite consultar cartelera, seleccionar funciones, elegir asientos, agregar boletos al carrito y confirmar compras. La aplicación fue integrada con una arquitectura de microservicios mediante API REST.
 
-CinePlus es una aplicación desarrollada con **Angular 20** que simula un sistema de cine completo con:
-- 📽️ Cartelera de películas con filtros dinámicos
-- 🎫 Selección de funciones (fecha y hora)
-- 💺 Mapa interactivo de asientos
-- 🛒 Carrito de compra con cupones de descuento
-- 📧 Formulario de contacto
-- 💾 Persistencia de datos en localStorage
+---
 
-## Tecnologías
+## ✨ Funcionalidades principales
 
-- **Angular 20** (Standalone Components, Signals, Control Flow)
-- **Bootstrap 5** + **Bootstrap Icons**
-- **TypeScript**
-- **SCSS**
-- **SSR (Server-Side Rendering)**
+- Consultar cartelera de películas
+- Filtrar películas por género
+- Buscar películas por nombre
+- Seleccionar fecha y horario de función
+- Consultar disponibilidad real de asientos
+- Reservar asientos
+- Agregar boletos al carrito
+- Validar cupones
+- Confirmar compras
+- Descargar boletos generados por backend
 
-## Estructura del Proyecto
+---
 
+## 🏗️ Arquitectura de integración
+
+El frontend consume cuatro microservicios principales:
+
+| Microservicio          | URL local                   | Responsabilidad                                          |
+|------------------------|-----------------------------|----------------------------------------------------------|
+| `ms-peliculas`         | `http://localhost:8001`     | Gestionar cartelera de películas                         |
+| `ms-funciones`         | `http://localhost:8002`     | Gestionar funciones, fechas, horarios y salas            |
+| `ms-reservas-asientos` | `http://localhost:8003`     | Controlar disponibilidad de asientos y reservas          |
+| `ms-compras-boletos`   | `http://localhost:8004`     | Confirmar compras, validar cupones y generar boletos     |
+
+---
+
+## 🖥️ Pantallas integradas con backend
+
+### Cartelera
+
+La pantalla de cartelera consume el microservicio de películas.
+
+**Endpoint utilizado:**
 ```
-src/app/
-├── models/           # Interfaces y tipos de datos
-├── services/         # Lógica de negocio y gestión de estado
-├── pages/            # Componentes de página
-│   ├── cartelera/    # Listado de películas
-│   ├── funciones/    # Selección de asientos
-│   ├── carrito/      # Carrito de compra
-│   └── contacto/     # Formulario de contacto
-├── app.routes.ts     # Configuración de rutas
-└── app.ts            # Componente raíz
+GET http://localhost:8001/api/v1/peliculas
 ```
 
-## Desarrollo
+Antes la cartelera usaba datos estáticos en el servicio Angular. Ahora las películas se cargan desde PostgreSQL mediante el microservicio `ms-peliculas`.
 
-Para iniciar el servidor de desarrollo:
+---
 
+### Selección de funciones
+
+La pantalla de selección de funciones consume el microservicio de funciones.
+
+**Endpoint utilizado:**
+```
+GET http://localhost:8002/api/v1/funciones/disponibles?movieId={id}&date={fecha}
+```
+
+Cuando el usuario selecciona una película y una fecha, Angular solicita al backend los horarios disponibles para esa película.
+
+---
+
+### Selección de asientos
+
+La pantalla de asientos consume el microservicio de reservas y asientos.
+
+**Consultar asientos ocupados:**
+```
+GET http://localhost:8003/api/v1/asientos/funcion/{funcionId}
+```
+
+**Crear una reserva:**
+```
+POST http://localhost:8003/api/v1/reservas
+```
+
+**Ejemplo de cuerpo de reserva:**
+```json
+{
+  "funcionId": 1,
+  "asientos": ["A1", "A2"]
+}
+```
+
+Con esta integración, los asientos ocupados ya no dependen únicamente del estado local del navegador.
+
+---
+
+### Carrito y compra
+
+La pantalla de carrito consume el microservicio de compras y boletos.
+
+**Validar cupones:**
+```
+POST http://localhost:8004/api/v1/cupones/validar
+```
+
+**Confirmar compra:**
+```
+POST http://localhost:8004/api/v1/compras
+```
+
+El backend calcula subtotal, descuento y total. También genera los boletos con códigos únicos y devuelve el contenido del archivo TXT para descarga.
+
+**Cupones disponibles:**
+
+| Código    | Descuento |
+|-----------|-----------|
+| `CINE10`  | 10%       |
+| `CINE20`  | 20%       |
+| `PROMO15` | 15%       |
+
+---
+
+## 🚀 Ejecutar en modo desarrollo
+
+**Instalar dependencias:**
 ```bash
 npm install
+```
+
+**Ejecutar Angular:**
+```bash
 npm start
 ```
 
-La aplicación estará disponible en `http://localhost:4200/`
+**Abrir en el navegador:** `http://localhost:4200`
 
-## Build
+> ⚠️ Para que la aplicación funcione correctamente, los microservicios del backend deben estar activos. Desde el repositorio `cineplus-back`:
+> ```bash
+> docker compose up -d --build
+> ```
 
-Para construir el proyecto para producción:
+---
 
+## 🐳 Ejecutar con Docker
+
+**Construir imagen del frontend:**
+```bash
+docker build -t cineplus-front .
+```
+
+**Ejecutar contenedor:**
+```bash
+docker run --rm -p 4200:80 --name cineplus-front-test cineplus-front
+```
+
+**Abrir:** `http://localhost:4200`
+
+**Detener contenedor:**
+```bash
+docker stop cineplus-front-test
+```
+
+---
+
+## 🐙 Ejecución completa con Docker Compose
+
+La ejecución completa del sistema se realiza desde el repositorio `cineplus-back`, donde se encuentra el `docker-compose.yml` que orquesta:
+
+- Frontend Angular
+- Microservicio de películas
+- Microservicio de funciones
+- Microservicio de reservas y asientos
+- Microservicio de compras y boletos
+- Bases de datos PostgreSQL
+
+**Desde `cineplus-back`:**
+```bash
+docker compose up -d --build
+```
+
+Luego abrir: `http://localhost:4200`
+
+---
+
+## 🧪 Flujo de prueba recomendado
+
+1. Abrir `http://localhost:4200`
+2. Verificar que la cartelera cargue desde backend
+3. Seleccionar una película y una fecha
+4. Verificar que los horarios se carguen desde `ms-funciones`
+5. Seleccionar una hora
+6. Verificar que los asientos se carguen desde `ms-reservas-asientos`
+7. Seleccionar asientos y agregar al carrito
+8. Aplicar cupón (ej. `CINE10`)
+9. Confirmar compra
+10. Verificar que se descargue el archivo de boletos generado por backend
+
+---
+
+## 📦 Build de producción
+
+**Generar build:**
 ```bash
 npm run build
 ```
 
-Los archivos compilados se generarán en el directorio `dist/`
-
-## Funcionalidades Principales
-
-### 🎬 Cartelera
-- Visualización de 10 películas con información detallada
-- Filtros por género y búsqueda por título
-- Modal con sinopsis y tráiler de YouTube
-- Cards con diseño moderno y animaciones
-
-### 🎫 Selección de Funciones
-- Selector de fecha y hora
-- Mapa de asientos interactivo (7 filas × 10 columnas)
-- Estados de asientos: libre (verde), seleccionado (azul), ocupado (rojo)
-- Validación de fechas y horas pasadas
-
-### 🛒 Carrito de Compra
-- Visualización de boletos seleccionados
-- Cálculo automático de totales
-- Cupones de descuento: **CINE10** (10%), **CINE20** (20%), **PROMO15** (15%)
-- Descarga automática de archivo `boletos.txt` con el comprobante
-
-### 📧 Contacto
-- Formulario con validaciones
-- Información del cine (dirección, teléfono, horario)
-
-## Integración con Backend (Futuro)
-
-El proyecto incluye comentarios `TODO: BACKEND` en varios archivos que indican cómo adaptar la aplicación para trabajar con un backend real:
-
-### Archivos con Comentarios de Integración
-
-- **`src/app/services/cine.service.ts`**: Servicio principal con comentarios detallados sobre:
-  - Endpoints necesarios del backend
-  - Cómo reemplazar localStorage por llamadas HTTP
-  - Gestión de autenticación con JWT
-  - Sincronización de estado con el servidor
-
-- **`src/app/models/movie.model.ts`**: Sugerencias sobre campos adicionales para los DTOs
-
-- **`src/app/pages/carrito/carrito.ts`**: 
-  - Validación de cupones desde el servidor
-  - Integración con pasarelas de pago
-  - Envío de emails de confirmación
-
-- **`src/app/pages/funciones/funciones.ts`**:
-  - Actualización en tiempo real de asientos (WebSockets)
-  - Sistema de reservas temporales con expiración
-
-- **`src/app/pages/contacto/contacto.ts`**:
-  - Envío de mensajes al backend
-  - Integración con captcha
-
-### Endpoints Sugeridos del Backend
-
+La salida se genera en:
 ```
-GET    /api/movies                        # Obtener todas las películas
-GET    /api/movies/:id                    # Obtener película específica
-GET    /api/funciones/:movieId            # Obtener horarios disponibles
-GET    /api/asientos/:funcionId           # Obtener mapa de asientos ocupados
-POST   /api/reservas/temporal             # Crear reserva temporal
-POST   /api/compras                       # Confirmar compra
-POST   /api/cupones/validar               # Validar cupón de descuento
-POST   /api/contacto                      # Enviar mensaje de contacto
+dist/cineplus/browser
 ```
 
-## Notas Técnicas
+---
 
-- **Persistencia actual**: Los datos se almacenan en `localStorage` del navegador
-- **SSR**: La aplicación soporta Server-Side Rendering
-- **Standalone Components**: No usa módulos NgModule, utiliza la nueva arquitectura de Angular
-- **Signals**: Usa el sistema de reactividad moderno de Angular
-- **Control Flow**: Usa la nueva sintaxis `@if`, `@for` en lugar de *ngIf, *ngFor
+## 🐋 Archivos Docker agregados
+
+| Archivo          | Descripción                                                       |
+|------------------|-------------------------------------------------------------------|
+| `Dockerfile`     | Construcción multietapa: compila con Node y sirve con Nginx       |
+| `.dockerignore`  | Excluye archivos innecesarios del contexto de build               |
+| `nginx.conf`     | Permite que las rutas internas de Angular funcionen al recargar   |
+
+---
+
+## 🛠️ Tecnologías utilizadas
+
+- [Angular](https://angular.io/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Bootstrap Icons](https://icons.getbootstrap.com/)
+- [Docker](https://www.docker.com/) & [Nginx](https://nginx.org/)
+- API REST con microservicios en [FastAPI](https://fastapi.tiangolo.com/)
+- [PostgreSQL](https://www.postgresql.org/)
