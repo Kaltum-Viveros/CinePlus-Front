@@ -7,7 +7,7 @@
       <i class="bi bi-check-circle text-success" style="font-size: 5rem"></i>
       <h2 class="mt-3 fw-bold text-success">¡Compra confirmada!</h2>
       <p class="text-light fs-5">
-        Tu archivo <strong>boletos.txt</strong> se ha descargado automáticamente.
+        Tus boletos fueron generados por el backend y se descargaron automáticamente.
       </p>
       <button class="btn btn-primary btn-lg mt-3" (click)="goToCartelera()">
         <i class="bi bi-film me-2"></i>Volver a la cartelera
@@ -98,8 +98,11 @@
                   <button
                     class="btn btn-outline-primary"
                     (click)="applyCoupon()"
-                    [disabled]="!couponCode()"
+                    [disabled]="!couponCode() || validatingCoupon()"
                   >
+                    @if (validatingCoupon()) {
+                      <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
                     Aplicar
                   </button>
                 </div>
@@ -135,12 +138,31 @@
             </div>
 
             <div class="d-grid">
-              <button class="btn btn-success btn-lg" (click)="confirmPurchase()">
-                <i class="bi bi-bag-check me-2"></i>Confirmar compra
+              @if (compraError()) {
+                <div class="alert alert-danger py-2">
+                  <i class="bi bi-exclamation-triangle me-1"></i>
+                  {{ compraError() }}
+                </div>
+              }
+              <button
+                class="btn btn-success btn-lg"
+                (click)="confirmPurchase()"
+                [disabled]="processingPurchase()"
+              >
+                @if (processingPurchase()) {
+                  <span>
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Confirmando compra...
+                  </span>
+                } @else {
+                  <span>
+                    <i class="bi bi-bag-check me-2"></i>Confirmar compra
+                  </span>
+                }
               </button>
             </div>
             <p class="text-muted text-center small mt-2 mb-0">
-              Se descargará un archivo <strong>boletos.txt</strong>
+              El backend confirmará la compra y generará los boletos.
             </p>
           </div>
         </div>

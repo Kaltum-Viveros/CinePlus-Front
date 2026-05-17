@@ -53,3 +53,38 @@ export interface Ticket {
   pricePerTicket: number;
   subtotal: number;
 }
+
+export interface CouponValidationResponse {
+  valid: boolean;
+  code: string | null;
+  discountPercentage: number;
+  discountAmount: number;
+  message: string;
+}
+
+export interface BoletoResponse {
+  id: number;
+  codigo: string;
+  reservaId: number;
+  movieId: number;
+  movieTitle: string;
+  funcionId: number;
+  date: string;
+  time: string;
+  room?: string | null;
+  asiento: string;
+  price: number;
+}
+
+export interface CompraResponse {
+  id: number;
+  subtotal: number;
+  descuentoPorcentaje: number;
+  descuentoMonto: number;
+  total: number;
+  cupon?: string | null;
+  estado: string;
+  fechaCompra: string;
+  boletos: BoletoResponse[];
+  contenidoTxt: string;
+}

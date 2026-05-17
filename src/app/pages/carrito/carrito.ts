@@ -25,18 +25,15 @@ export class Carrito {
   readonly cartTotal = this.cineService.cartTotal;
   readonly cartCount = this.cineService.cartCount;
 
+  readonly validatingCoupon = this.cineService.validatingCoupon;
+  readonly processingPurchase = this.cineService.processingPurchase;
+  readonly compraError = this.cineService.compraError;
+
   protected couponCode = signal('');
   protected couponApplied = signal(false);
   protected couponDiscount = signal(0);
   protected purchaseCompleted = signal(false);
   protected couponError = signal('');
-
-  // TODO: BACKEND - Los cupones deberían validarse contra el servidor
-  private readonly validCoupons: Record<string, number> = {
-    CINE10: 10,
-    CINE20: 20,
-    PROMO15: 15,
-  };
 
   protected finalTotal = computed(() => {
     const total = this.cartTotal();
@@ -50,30 +47,24 @@ export class Carrito {
 
   applyCoupon(): void {
     const code = this.couponCode().toUpperCase().trim();
-    
-    // TODO: BACKEND - Validar cupón con el servidor
-    // this.http.post<{valid: boolean, discount: number}>('/api/cupones/validar', { code })
-    //   .subscribe({
-    //     next: (response) => {
-    //       if (response.valid) {
-    //         this.couponDiscount.set(response.discount);
-    //         this.couponApplied.set(true);
-    //         this.couponError.set('');
-    //       } else {
-    //         this.couponError.set('Cupón no válido');
-    //       }
-    //     }
-    //   });
-    
-    if (this.validCoupons[code]) {
-      this.couponDiscount.set(this.validCoupons[code]);
-      this.couponApplied.set(true);
-      this.couponError.set('');
-    } else {
-      this.couponError.set('Cupón no válido. Prueba: CINE10, CINE20, PROMO15');
-      this.couponApplied.set(false);
-      this.couponDiscount.set(0);
+
+    if (!code) {
+      this.couponError.set('Ingresa un cupón.');
+      return;
     }
+
+    this.cineService.validateCoupon(code, this.cartTotal(), (response) => {
+      if (response.valid) {
+        this.couponCode.set(response.code || code);
+        this.couponDiscount.set(response.discountPercentage);
+        this.couponApplied.set(true);
+        this.couponError.set('');
+      } else {
+        this.couponError.set(response.message);
+        this.couponApplied.set(false);
+        this.couponDiscount.set(0);
+      }
+    });
   }
 
   removeCoupon(): void {
@@ -90,11 +81,18 @@ export class Carrito {
   confirmPurchase(): void {
     if (this.cart().length === 0) return;
 
-    const content = this.cineService.confirmPurchase(this.couponDiscount());
-    if (content) {
-      this.cineService.downloadFile(content, 'boletos.txt');
+    const couponCode = this.couponApplied()
+      ? this.couponCode().toUpperCase().trim()
+      : null;
+
+    this.cineService.confirmPurchase(couponCode, (compra) => {
+      this.cineService.downloadFile(
+        compra.contenidoTxt,
+        `boletos-compra-${compra.id}.txt`
+      );
+
       this.purchaseCompleted.set(true);
-    }
+    });
   }
 
   goToCartelera(): void {

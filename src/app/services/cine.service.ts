@@ -1,7 +1,15 @@
 import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Movie, Ticket, Funcion, Seat, ReservaResponse } from '../models/movie.model';
+import {
+  Movie,
+  Ticket,
+  Funcion,
+  Seat,
+  ReservaResponse,
+  CouponValidationResponse,
+  CompraResponse,
+} from '../models/movie.model';
 
 /**
  * Servicio central para gestionar la lógica de CinePlus.
@@ -43,6 +51,7 @@ export class CineService {
   private readonly peliculasApiUrl = 'http://localhost:8001/api/v1/peliculas';
   private readonly funcionesApiUrl = 'http://localhost:8002/api/v1/funciones';
   private readonly reservasApiUrl = 'http://localhost:8003/api/v1';
+  private readonly comprasApiUrl = 'http://localhost:8004/api/v1';
 
   // TODO: BACKEND - Reemplazar este array estático con una llamada HTTP
   // Ejemplo: readonly movies = signal<Movie[]>([]);
@@ -61,6 +70,13 @@ export class CineService {
 
   readonly creatingReserva = signal<boolean>(false);
   readonly reservaError = signal<string | null>(null);
+
+  readonly validatingCoupon = signal<boolean>(false);
+  readonly couponValidationError = signal<string | null>(null);
+
+  readonly processingPurchase = signal<boolean>(false);
+  readonly compraError = signal<string | null>(null);
+  readonly lastCompra = signal<CompraResponse | null>(null);
 
   readonly genres = computed(() => [
     ...new Set(this.movies().map((movie) => movie.genre)),
@@ -239,60 +255,102 @@ export class CineService {
     this.saveToStorage('cart', []);
   }
 
-  // TODO: BACKEND - Confirmar compra debería:
-  // 1. POST /api/compras con todos los datos
-  // 2. El backend genera el PDF/TXT y retorna la URL de descarga
-  // 3. Marcar asientos como ocupados en la base de datos
-  confirmPurchase(couponDiscount: number = 0): string {
-    const tickets = this.cart();
-    if (tickets.length === 0) return '';
+  validateCoupon(
+    code: string,
+    subtotal: number,
+    onSuccess: (response: CouponValidationResponse) => void
+  ): void {
+    const cleanCode = code.trim().toUpperCase();
 
-    const occupied = { ...this.occupiedSeats() };
-
-    let content = '============================================\n';
-    content += '     CinePlus - Confirmación de Compra\n';
-    content += '============================================\n\n';
-
-    let grandTotal = 0;
-
-    tickets.forEach((ticket, i) => {
-      const key = `${ticket.movie.id}_${ticket.funcion.date}_${ticket.funcion.time}`;
-      const existing = occupied[key] || [];
-      occupied[key] = [...existing, ...ticket.seats];
-
-      content += `--- Boleto ${i + 1} ---\n`;
-      content += `Película: ${ticket.movie.title}\n`;
-      content += `Función: ${ticket.funcion.date} - ${ticket.funcion.time} hrs\n`;
-      content += `Asientos: ${ticket.seats.join(', ')}\n`;
-      content += `Cantidad: ${ticket.seats.length} boleto(s)\n`;
-      content += `Precio Unitario: $${ticket.pricePerTicket}\n`;
-      content += `Subtotal: $${ticket.subtotal}\n\n`;
-      grandTotal += ticket.subtotal;
-    });
-
-    const discountAmount = grandTotal * (couponDiscount / 100);
-    const finalTotal = grandTotal - discountAmount;
-
-    content += '--------------------------------------------\n';
-    if (couponDiscount > 0) {
-      content += `Subtotal: $${grandTotal}\n`;
-      content += `Cupón aplicado: ${couponDiscount}% (-$${discountAmount.toFixed(2)})\n`;
-    } else {
-      content += `Cupón aplicado: NO\n`;
+    if (!cleanCode) {
+      this.couponValidationError.set('Ingresa un cupón.');
+      return;
     }
-    content += `TOTAL: $${finalTotal.toFixed(2)}\n`;
-    content += '--------------------------------------------\n\n';
-    content += 'Gracias por su compra en CinePlus.\n';
 
-    this.occupiedSeats.set(occupied);
-    this.saveToStorage('occupiedSeats', occupied);
-    this.clearCart();
-    this.selectedMovie.set(null);
-    this.selectedFuncion.set(null);
-    this.removeFromStorage('selectedMovie');
-    this.removeFromStorage('selectedFuncion');
+    this.validatingCoupon.set(true);
+    this.couponValidationError.set(null);
 
-    return content;
+    this.http
+      .post<CouponValidationResponse>(`${this.comprasApiUrl}/cupones/validar`, {
+        code: cleanCode,
+        subtotal,
+      })
+      .subscribe({
+        next: (response) => {
+          this.validatingCoupon.set(false);
+          onSuccess(response);
+        },
+        error: () => {
+          this.validatingCoupon.set(false);
+          this.couponValidationError.set('No se pudo validar el cupón.');
+        },
+      });
+  }
+
+  confirmPurchase(
+    couponCode: string | null,
+    onSuccess: (response: CompraResponse) => void
+  ): void {
+    const tickets = this.cart();
+
+    if (tickets.length === 0) {
+      this.compraError.set('El carrito está vacío.');
+      return;
+    }
+
+    const ticketsSinReserva = tickets.some((ticket) => !ticket.reservaId || !ticket.funcion.id);
+
+    if (ticketsSinReserva) {
+      this.compraError.set(
+        'Hay boletos sin reserva o función válida. Vuelve a seleccionar la función y los asientos.'
+      );
+      return;
+    }
+
+    this.processingPurchase.set(true);
+    this.compraError.set(null);
+
+    const payload = {
+      couponCode: couponCode || null,
+      tickets: tickets.map((ticket) => ({
+        reservaId: ticket.reservaId,
+        movieId: ticket.movie.id,
+        movieTitle: ticket.movie.title,
+        funcionId: ticket.funcion.id,
+        date: ticket.funcion.date,
+        time: ticket.funcion.time,
+        room: ticket.funcion.room || null,
+        seats: ticket.seats,
+        pricePerTicket: ticket.pricePerTicket,
+      })),
+    };
+
+    this.http.post<CompraResponse>(`${this.comprasApiUrl}/compras`, payload).subscribe({
+      next: (response) => {
+        this.processingPurchase.set(false);
+        this.lastCompra.set(response);
+
+        this.clearCart();
+        this.selectedMovie.set(null);
+        this.selectedFuncion.set(null);
+        this.removeFromStorage('selectedMovie');
+        this.removeFromStorage('selectedFuncion');
+
+        onSuccess(response);
+      },
+      error: (error) => {
+        this.processingPurchase.set(false);
+
+        const detail = error?.error?.detail;
+
+        if (typeof detail === 'string') {
+          this.compraError.set(detail);
+          return;
+        }
+
+        this.compraError.set('No se pudo confirmar la compra.');
+      },
+    });
   }
 
   // TODO: BACKEND - El backend debería generar y retornar el archivo
